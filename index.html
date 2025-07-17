@@ -39,12 +39,13 @@
     <button onclick="clearNotes()">Clear</button>
 
     <label for="download">Download:</label>
-    <select id="download" name="download">
-        <option onclick="downloadPDF()">PDF</option>
-        <option onclick="downloadPNG()">PNG</option>
-        <option onclick="downloadSVG()">SVG</option>
-        <option onclick="downloadMIDI()">MIDI</option>
+    <select id="download" onchange="handleDownloadChange(event)">
+      <option value="pdf">PDF</option>
+      <option value="png">PNG</option>
+      <option value="svg">SVG</option>
+      <option value="midi">MIDI</option>
     </select>
+
 
   </div>
 

@@ -126,12 +126,63 @@ function clearNotes() {
   render();
 }
 
+function handleDownloadChange(e) {
+  const val = e.target.value;
+  if (val === "png") downloadPNG();
+  else if (val === "pdf") downloadPDF();
+  else if (val === "svg") downloadSVG();
+  else if (val === "midi") downloadMIDI();
+  // reset select if you want, e.g. e.target.selectedIndex = 0;
+}
 async function downloadPDF() {
 
 }
-function downloadPNG(){
+function downloadPNG() {
+  const container = document.getElementById("musicContainer");
+  const svg = container.querySelector("svg");
 
+  if (!svg) {
+    alert("No SVG found to export!");
+    return;
+  }
+
+  const svgData = new XMLSerializer().serializeToString(svg);
+
+  // Create a canvas matching the SVG size
+  const canvas = document.createElement("canvas");
+  const rect = svg.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  const ctx = canvas.getContext("2d");
+
+  const img = new Image();
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+
+    URL.revokeObjectURL(url);
+
+    // Trigger PNG download
+    const pngData = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = pngData;
+    a.download = "music.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  img.onerror = () => {
+    alert("Failed to load SVG image for conversion.");
+    URL.revokeObjectURL(url);
+  };
+
+  img.src = url;
 }
+
 async function downloadSVG(){
   const container = document.getElementById("musicContainer");
   const svg = container.querySelector("svg");
