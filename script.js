@@ -1,77 +1,81 @@
-const VF = Vex.Flow;
-
-// Set up renderer and context using VexFlow
-const renderer = new VF.Renderer(document.getElementById("musicContainer"), VF.Renderer.Backends.SVG);
-const ctx = renderer.getContext();
-
-// Resize canvas (you can adjust width/height as needed)
-renderer.resize(3000, 5000);
+const {
+  Renderer,
+  Stave,
+  StaveNote,
+  Voice,
+  Formatter,
+  Accidental
+} = Vex.Flow;
 
 let notes = [];
 
 const durationMap = {
-  "16": {vfDuration: "16", beats: 0.25},
-  "8":  {vfDuration: "8",  beats: 0.5},
-  "4":  {vfDuration: "q",  beats: 1},
-  "2":  {vfDuration: "h",  beats: 2},
-  "1":  {vfDuration: "w",  beats: 4},
+  "16": { vfDuration: "16", beats: 0.25 },
+  "8":  { vfDuration: "8",  beats: 0.5 },
+  "4":  { vfDuration: "q",  beats: 1 },
+  "2":  { vfDuration: "h",  beats: 2 },
+  "1":  { vfDuration: "w",  beats: 4 },
+  "16r": { vfDuration: "16r", beats: 0.25 },
+  "8r":  { vfDuration: "8r",  beats: 0.5 },
+  "4r":  { vfDuration: "qr",  beats: 1 },
+  "2r":  { vfDuration: "hr",  beats: 2 },
+  "1r":  { vfDuration: "wr",  beats: 4 },
+};
 
-  "16r": {vfDuration: "16r", beats: 0.25},
-  "8r":  {vfDuration: "8r",  beats: 0.5},
-  "4r":  {vfDuration: "qr",  beats: 1},
-  "2r":  {vfDuration: "hr",  beats: 2},
-  "1r":  {vfDuration: "wr",  beats: 4},
+const accidentalsMap = {
+  "none": null,
+  "sharp": "#",
+  "flat": "b",
+  "natural": "n",
+  "double-sharp": "##",
+  "double-flat": "bb"
 };
 
 function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
   const measures = [];
-  let currentMeasure = [];
+  let current = [];
   let currentBeats = 0;
 
   for (let note of notes) {
-    const beatVal = durationMap[note.duration]?.beats;
-    if (beatVal == null) continue;
+    const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
+    const beatVal = durationMap[durKey]?.beats || 0;
 
     if (currentBeats + beatVal > beatsPerMeasure) {
-      measures.push(currentMeasure);
-      currentMeasure = [];
+      measures.push(current);
+      current = [];
       currentBeats = 0;
     }
 
-    currentMeasure.push(note);
+    current.push(note);
     currentBeats += beatVal;
   }
 
-  measures.push(currentMeasure);  
+  if (current.length > 0) {
+    measures.push(current);
+  }
 
   return measures;
 }
 
 function render() {
-  // Clear container
   const container = document.getElementById("musicContainer");
   container.innerHTML = "";
 
-  // Create a new renderer and context tied to fresh SVG container
-  const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
-
-  // Calculate needed height based on measures
-  const measures = groupNotesIntoMeasures(notes);
+  const renderer = new Renderer(container, Renderer.Backends.SVG);
   const staveWidth = 400;
   const startX = 10;
   const startY = 40;
   const verticalSpacing = 120;
   const firstLonger = 30;
   const measuresPerRow = 3;
+
+  const measures = groupNotesIntoMeasures(notes);
   const totalRows = Math.ceil(measures.length / measuresPerRow);
   const totalHeight = startY + totalRows * verticalSpacing;
 
-  // Resize to fit
   renderer.resize(1300, totalHeight);
-
   const ctx = renderer.getContext();
 
-  // Render measures as before
   measures.forEach((measureNotes, i) => {
     const row = Math.floor(i / measuresPerRow);
     const col = i % measuresPerRow;
@@ -80,44 +84,41 @@ function render() {
     const y = startY + row * verticalSpacing;
     const width = staveWidth + (col === 0 ? firstLonger : 0);
 
-    const stave = new VF.Stave(x, y, width);
+    const stave = new Stave(x, y, width);
     if (col === 0) stave.addClef("treble").addTimeSignature("4/4");
 
     stave.setContext(ctx).draw();
 
-    const vfNotes = measureNotes.map(n => {
-      const dur = durationMap[n.duration].vfDuration;
-      const isRest = dur.endsWith("r");
-
-      const note = new VF.StaveNote({
-        clef: "treble",
-        keys: isRest ? ["b/4"] : [n.key.toLowerCase()],
-        duration: dur
-      });
-
-      if (!isRest) {
-        if (n.key.includes("#")) note.addAccidental(0, new VF.Accidental("#"));
-        else if (n.key.includes("b")) note.addAccidental(0, new VF.Accidental("b"));
-      }
-
-      return note;
-    });
-
-    const voice = new VF.Voice({ num_beats: 4, beat_value: 4 });
+    const voice = new Voice({ num_beats: 4, beat_value: 4 });
     voice.setStrict(false);
-    voice.addTickables(vfNotes);
+    voice.addTickables(measureNotes);
 
-    new VF.Formatter().joinVoices([voice]).format([voice], width - 65);
+    new Formatter().joinVoices([voice]).format([voice], width - 65);
     voice.draw(ctx, stave);
   });
 }
 
-
 function addNote() {
   const pitch = document.getElementById("note-select").value;
-  const duration = document.getElementById("duration-select").value;
+  const octave = document.getElementById("octave-select")?.value || "4";
+  const fullPitch = pitch.toLowerCase() + "/" + octave;
+  const durationKey = document.getElementById("duration-select").value;
+  const accidental = document.getElementById("accidentals-select")?.value || "none";
 
-  notes.push({ key: pitch, duration });
+  const dur = durationMap[durationKey].vfDuration;
+  const isRest = dur.endsWith("r");
+
+  const note = new StaveNote({
+    clef: "treble",
+    keys: isRest ? ["b/4"] : [fullPitch],
+    duration: dur,
+  });
+
+  if (!isRest && accidentalsMap[accidental]) {
+    note.addModifier(new Accidental(accidentalsMap[accidental]), 0);
+  }
+
+  notes.push(note);
   render();
 }
 
@@ -132,23 +133,14 @@ function handleDownloadChange(e) {
   else if (val === "pdf") downloadPDF();
   else if (val === "svg") downloadSVG();
   else if (val === "midi") downloadMIDI();
-  // reset select if you want, e.g. e.target.selectedIndex = 0;
 }
-async function downloadPDF() {
 
-}
 function downloadPNG() {
   const container = document.getElementById("musicContainer");
   const svg = container.querySelector("svg");
-
-  if (!svg) {
-    alert("No SVG found to export!");
-    return;
-  }
+  if (!svg) return alert("No SVG to download!");
 
   const svgData = new XMLSerializer().serializeToString(svg);
-
-  // Create a canvas matching the SVG size
   const canvas = document.createElement("canvas");
   const rect = svg.getBoundingClientRect();
   canvas.width = rect.width;
@@ -162,57 +154,45 @@ function downloadPNG() {
   img.onload = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
-
     URL.revokeObjectURL(url);
-
-    // Trigger PNG download
-    const pngData = canvas.toDataURL("image/png");
     const a = document.createElement("a");
-    a.href = pngData;
+    a.href = canvas.toDataURL("image/png");
     a.download = "music.png";
-    document.body.appendChild(a);
     a.click();
-    a.remove();
   };
 
   img.onerror = () => {
-    alert("Failed to load SVG image for conversion.");
+    alert("Failed to load SVG image.");
     URL.revokeObjectURL(url);
   };
 
   img.src = url;
 }
 
-async function downloadSVG(){
+function downloadSVG() {
   const container = document.getElementById("musicContainer");
   const svg = container.querySelector("svg");
+  if (!svg) return alert("No SVG to download!");
 
-  if (!svg) {
-    alert("No SVG to download!");
-    return;
-  }
-
-  // Serialize SVG XML to string
   const serializer = new XMLSerializer();
   const svgStr = serializer.serializeToString(svg);
-
-  // Create a Blob with SVG MIME type
   const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
 
-  // Create a temporary download link
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = "music.svg";
-  document.body.appendChild(a);
   a.click();
-
-  // Cleanup
-  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-function downloadMIDI(){
 
+function downloadPDF() {
+  alert("PDF export is not implemented yet.");
 }
 
+function downloadMIDI() {
+  alert("MIDI export is not implemented yet.");
+}
+
+// Initial render
 render();
