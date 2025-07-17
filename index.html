@@ -11,6 +11,8 @@
   <h1>Simple Music Notation Editor</h1>
 
   <div class="controls">
+    <label for="keyboard-select">Type note:</label>
+    <input type="text" id="keyboard-select" name="keyboard-select" onkeydown="if(event.key==='Enter'){addNoteFromInput();}">
     <select id="note-select">
       <option value="c">C</option>
       <option value="d">D</option>

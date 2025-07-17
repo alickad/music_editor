@@ -121,6 +121,33 @@ function addNote() {
   notes.push(note);
   render();
 }
+function addNoteFromInput() {
+  const keyboardInput = document.getElementById("keyboard-select").value;
+  const [note, octave] = keyboardInput.split("/");
+  document.getElementById("note-select").value = note;
+  document.getElementById("octave-select").value = octave || "4";
+
+  let notePart = note;
+  let accidentalPart = "";
+  if (note.includes("#")) {
+      notePart = note.replace("#", "");
+      accidentalPart = "sharp";
+  } else if (note.includes("b")) {
+      // Only treat 'b' as flat if it's not the note 'b'
+      if (note.length > 1 && note[1] === "b") {
+          notePart = note[0];
+          accidentalPart = "flat";
+      }
+  }  
+  document.getElementById("note-select").value = notePart;
+  document.getElementById("octave-select").value = octave || "4";
+  if (accidentalPart) {
+      document.getElementById("accidentals-select").value = accidentalPart;
+  } else {
+      document.getElementById("accidentals-select").value = "none";
+  }
+  addNote();
+}
 
 function clearNotes() {
   notes = [];
