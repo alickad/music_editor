@@ -5,6 +5,7 @@
   <title>Simple Music Notation Editor</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
   <h1>Simple Music Notation Editor</h1>
@@ -36,9 +37,18 @@
    
     <button onclick="addNote()">Add Note</button>
     <button onclick="clearNotes()">Clear</button>
+
+    <label for="download">Download:</label>
+    <select id="download" name="download">
+        <option onclick="downloadPDF()">PDF</option>
+        <option onclick="downloadPNG()">PNG</option>
+        <option onclick="downloadSVG()">SVG</option>
+        <option onclick="downloadMIDI()">MIDI</option>
+    </select>
+
   </div>
 
-  <canvas id="musicCanvas" width="3000" height="5000"></canvas>
+  <div id="musicContainer"></div>
 
   <script src="script.js"></script>
 </body>

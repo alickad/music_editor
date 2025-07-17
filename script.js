@@ -1,7 +1,7 @@
 const VF = Vex.Flow;
 
 // Set up renderer and context using VexFlow
-const renderer = new VF.Renderer(document.getElementById("musicCanvas"), VF.Renderer.Backends.CANVAS);
+const renderer = new VF.Renderer(document.getElementById("musicContainer"), VF.Renderer.Backends.SVG);
 const ctx = renderer.getContext();
 
 // Resize canvas (you can adjust width/height as needed)
@@ -48,35 +48,41 @@ function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
 }
 
 function render() {
-  ctx.clear();
+  // Clear container
+  const container = document.getElementById("musicContainer");
+  container.innerHTML = "";
 
-  const staveWidth = 100;
+  // Create a new renderer and context tied to fresh SVG container
+  const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+
+  // Calculate needed height based on measures
+  const measures = groupNotesIntoMeasures(notes);
+  const staveWidth = 400;
   const startX = 10;
   const startY = 40;
-  const verticalSpacing = 100;
+  const verticalSpacing = 120;
   const firstLonger = 30;
+  const measuresPerRow = 3;
+  const totalRows = Math.ceil(measures.length / measuresPerRow);
+  const totalHeight = startY + totalRows * verticalSpacing;
 
-  const canvasWidth = 1500;
-  const measuresPerRow = Math.floor(canvasWidth / staveWidth);
+  // Resize to fit
+  renderer.resize(1300, totalHeight);
 
-  const measures = groupNotesIntoMeasures(notes);
+  const ctx = renderer.getContext();
 
+  // Render measures as before
   measures.forEach((measureNotes, i) => {
     const row = Math.floor(i / measuresPerRow);
     const col = i % measuresPerRow;
 
-    let stave, x;
+    const x = startX + col * staveWidth + (col === 0 ? 0 : firstLonger);
     const y = startY + row * verticalSpacing;
-    if (col == 0){
-        x = startX;
-        stave = new VF.Stave(x, y, staveWidth + firstLonger);
-        stave.addClef("treble").addTimeSignature("4/4");
-    }
-    else{
-        x = startX + col * staveWidth + firstLonger;
-        stave = new VF.Stave(x,y, staveWidth);
-    }
-    
+    const width = staveWidth + (col === 0 ? firstLonger : 0);
+
+    const stave = new VF.Stave(x, y, width);
+    if (col === 0) stave.addClef("treble").addTimeSignature("4/4");
+
     stave.setContext(ctx).draw();
 
     const vfNotes = measureNotes.map(n => {
@@ -90,11 +96,8 @@ function render() {
       });
 
       if (!isRest) {
-        if (n.key.includes("#")) {
-          note.addAccidental(0, new VF.Accidental("#"));
-        } else if (n.key.includes("b")) {
-          note.addAccidental(0, new VF.Accidental("b"));
-        }
+        if (n.key.includes("#")) note.addAccidental(0, new VF.Accidental("#"));
+        else if (n.key.includes("b")) note.addAccidental(0, new VF.Accidental("b"));
       }
 
       return note;
@@ -104,10 +107,11 @@ function render() {
     voice.setStrict(false);
     voice.addTickables(vfNotes);
 
-    new VF.Formatter().joinVoices([voice]).format([voice], staveWidth);
+    new VF.Formatter().joinVoices([voice]).format([voice], width - 65);
     voice.draw(ctx, stave);
   });
 }
+
 
 function addNote() {
   const pitch = document.getElementById("note-select").value;
@@ -120,6 +124,44 @@ function addNote() {
 function clearNotes() {
   notes = [];
   render();
+}
+
+async function downloadPDF() {
+
+}
+function downloadPNG(){
+
+}
+async function downloadSVG(){
+  const container = document.getElementById("musicContainer");
+  const svg = container.querySelector("svg");
+
+  if (!svg) {
+    alert("No SVG to download!");
+    return;
+  }
+
+  // Serialize SVG XML to string
+  const serializer = new XMLSerializer();
+  const svgStr = serializer.serializeToString(svg);
+
+  // Create a Blob with SVG MIME type
+  const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+
+  // Create a temporary download link
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "music.svg";
+  document.body.appendChild(a);
+  a.click();
+
+  // Cleanup
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function downloadMIDI(){
+
 }
 
 render();
