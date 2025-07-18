@@ -16,3 +16,5 @@ A simple music notation web editor. Some version (not neccessarily up to date) c
 - multiple notes played at once
 - select notes / delete notes / edit notes
 - tutorial on the web page (documentation for user)
+- variable measure length (based on number of notes)
+- ?choose different key, measure, ...?
