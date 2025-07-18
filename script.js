@@ -221,5 +221,62 @@ function downloadMIDI() {
   alert("MIDI export is not implemented yet.");
 }
 
+function playSound() {
+    const synth = new Tone.Synth().toDestination();
+    const now = Tone.now();
+    let time = now;
+    notes.forEach((note) => {
+        // Skip rests
+        if (note.isRest()) {
+            const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
+            const beats = durationMap[durKey]?.beats || 0.5;
+            time += beats * 0.5;
+            return;
+        }
+        // Get note name and octave
+        const key = note.keys[0];
+        let [noteNameRaw, octave] = key.split("/");
+
+        // Default accidental is none
+        let accidental = "";
+
+        // Check for accidental modifier (VexFlow 4+)
+        if (note.modifiers && note.modifiers.length > 0) {
+            const acc = note.modifiers.find(m =>
+                (typeof m.getCategory === "function" && m.getCategory() === "accidentals") ||
+                m.type === "Accidental"
+            );
+            if (acc) {
+                if (typeof acc.getValue === "function") {
+                    accidental = acc.getValue();
+                } else if (acc.value) {
+                    accidental = acc.value;
+                }
+            }
+        }
+
+        // If no modifier, try to extract accidental from key name
+        if (!accidental && noteNameRaw.length > 1) {
+            if (noteNameRaw[1] === "#") accidental = "#";
+            else if (noteNameRaw[1] === "b") accidental = "b";
+        }
+
+        // Compose Tone.js note name
+        let toneNote = noteNameRaw[0].toUpperCase();
+        if (accidental === "#") toneNote += "#";
+        else if (accidental === "b") toneNote += "b";
+        else if (accidental === "##") toneNote += "##";
+        else if (accidental === "bb") toneNote += "bb";
+        // else if (accidental === "n") ; // natural, do nothing
+
+        const toneNoteFull = toneNote + (octave || "4");
+        const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
+        const beats = durationMap[durKey]?.beats || 0.5;
+        const seconds = beats * 0.5;
+        synth.triggerAttackRelease(toneNoteFull, seconds, time);
+        time += seconds;
+    });
+}
+
 // Initial render
 render();
