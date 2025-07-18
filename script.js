@@ -129,26 +129,44 @@ function deleteLastNote() {
 function addNoteFromInput() {
   const keyboardInput = document.getElementById("keyboard-select").value;
   const [note, octave] = keyboardInput.split("/");
-  document.getElementById("note-select").value = note;
-  document.getElementById("octave-select").value = octave || "4";
 
   let notePart = note;
   let accidentalPart = "";
   if (note.includes("#")) {
-      notePart = note.replace("#", "");
-      accidentalPart = "sharp";
-  } else if (note.includes("b")) {
+    if (note.length === 2 && note[1] === "#") {
+        notePart = note[0];
+        accidentalPart = "sharp";
+    }
+    else if (note.length === 3 && note[1] === "#" && note[2] === "#") {
+        notePart = note[0];
+        accidentalPart = "double-sharp";
+    }
+  }
+  else if (note.includes("b")) {
       // Only treat 'b' as flat if it's not the note 'b'
-      if (note.length > 1 && note[1] === "b") {
+      if (note.length === 2 && note[1] === "b") {
           notePart = note[0];
           accidentalPart = "flat";
       }
-  }  
+      if (note.length === 3 && note[1] === "b" && note[2] === "b") {
+          notePart = note[0];
+          accidentalPart = "double-flat";
+      }
+  } 
+  else if (note.length === 2 && note[1] === "n") {
+      notePart = note[0];
+      accidentalPart = "natural";
+  } 
+  else if (note.length > 1){
+    alert("Invalid note format. Use format like 'C#/4' or 'Bb/3'.");
+  }
+
   document.getElementById("note-select").value = notePart;
   document.getElementById("octave-select").value = octave || "4";
   if (accidentalPart) {
       document.getElementById("accidentals-select").value = accidentalPart;
-  } else {
+  } 
+  else {
       document.getElementById("accidentals-select").value = "none";
   }
   addNote();
@@ -282,6 +300,17 @@ function playSound() {
         time += seconds;
     });
 }
+
+document.addEventListener("keydown", function (e) {
+    const active = document.activeElement;
+    if (
+        e.key === "Backspace" &&
+        (!active || active.id !== "keyboard-select")
+    ) {
+        e.preventDefault();
+        deleteLastNote();
+    }
+});
 
 // Initial render
 render();
