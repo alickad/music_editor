@@ -13,7 +13,7 @@ A simple music notation web editor. Some version (not neccessarily up to date) c
 ## TODO
 - music playback not ignoring accidentals
 - download MIDI and PDF
-- multiple notes played at once
+- multiple notes played at once (then also in playback)
 - select notes / delete notes / edit notes
 - tutorial on the web page (documentation for user)
 - variable measure length (based on number of notes)

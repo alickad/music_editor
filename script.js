@@ -121,6 +121,11 @@ function addNote() {
   notes.push(note);
   render();
 }
+function deleteLastNote() {
+  if (notes.length === 0) return;
+  notes.pop();
+  render();
+}
 function addNoteFromInput() {
   const keyboardInput = document.getElementById("keyboard-select").value;
   const [note, octave] = keyboardInput.split("/");
