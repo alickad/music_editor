@@ -58,7 +58,56 @@ function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
 }
 
 function calculateMeasureWidths(measures){
+  const rowLength = 1250;
+  const oneNoteWidth = 50;
+  let widths = [];
+  let currentLength = 0;
+  for (let i = 0; i < measures.length; i++){
+    let width = measures[i].length * oneNoteWidth;
+    let nextWidth = rowLength;
+    if (i < measures.length - 1){
+      nextWidth = measures[i+1].length * oneNoteWidth;
+    }
+    if (currentLength + width + nextWidth >= rowLength){
+      width = rowLength - currentLength;
+      currentLength = 0;
+    }
+    else{
+      currentLength += width;
+    }
+    widths.push(width);
+  }
 
+  return widths;
+}
+
+function numOfRows(widths){
+  let sum = 0;
+  rowLength = 1250;
+  for (let i = 0; i < widths.length; i++){
+    sum += widths[i];
+  }
+  return sum / rowLength;
+}
+
+function areFirst(widths){
+  let areFirst = [];
+  rowLength = 1250;
+  currentWidth = 0;
+  for (let i = 0; i < widths.length; i++){
+    if (currentWidth === 0){
+      areFirst.push(1);
+    }
+    else{
+      areFirst.push(0);
+    }
+    currentWidth += widths[i];
+    if (currentWidth >= rowLength){
+      currentWidth = 0;
+    }
+  }
+
+  return areFirst;
 }
 
 function render() {
@@ -66,30 +115,30 @@ function render() {
   container.innerHTML = "";
 
   const renderer = new Renderer(container, Renderer.Backends.SVG);
-  const rowLength = 1300;
-  const oneNoteWidth = 50;
+  const rowLength = 1250;
   const startX = 10;
   const startY = 40;
   const verticalSpacing = 120;
   const firstLonger = 65;
 
   const measures = groupNotesIntoMeasures(notes);
+  const measureWidths = calculateMeasureWidths(measures);
+  const isFirst = areFirst(measureWidths)
 
-  const totalRows = 10;               ///////////////////TODOOOOOOOOOOO
+  const totalRows = numOfRows(measureWidths);              
   const totalHeight = startY + totalRows * verticalSpacing;
 
-  renderer.resize(1300, totalHeight);
+  renderer.resize(1365, totalHeight);
   const ctx = renderer.getContext();
 
 
-  let currentRow = 0;
+  let currentRow = -1;
   let lastX = startX;
-  measures.forEach((measureNotes, i) => {
-    let baseStaveWidth = oneNoteWidth * measureNotes.length;
+  for (let i = 0; i < measures.length; i++){
+    let measureNotes = measures[i];
+    let baseStaveWidth = measureWidths[i];
     let currentStaveWidth = baseStaveWidth;
-    let isFirstCol = 0;
-    if (lastX + currentStaveWidth >= rowLength || (currentRow === 0 && lastX === startX)){
-      isFirstCol = 1;
+    if (isFirst[i]){
       lastX = startX;
       currentRow++;
       currentStaveWidth += firstLonger;
@@ -98,7 +147,7 @@ function render() {
     const y = startY + currentRow * verticalSpacing;
 
     const stave = new Stave(x, y, currentStaveWidth);
-    if (isFirstCol) stave.addClef("treble").addTimeSignature("4/4");
+    if (isFirst[i]) stave.addClef("treble").addTimeSignature("4/4");
 
     stave.setContext(ctx).draw();
 
@@ -110,7 +159,7 @@ function render() {
     voice.draw(ctx, stave);
 
     lastX += currentStaveWidth;
-  });
+  };
 }
 
 function addNote() {
