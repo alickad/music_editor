@@ -57,35 +57,48 @@ function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
   return measures;
 }
 
+function calculateMeasureWidths(measures){
+
+}
+
 function render() {
   const container = document.getElementById("musicContainer");
   container.innerHTML = "";
 
   const renderer = new Renderer(container, Renderer.Backends.SVG);
-  const staveWidth = 400;
+  const rowLength = 1300;
+  const oneNoteWidth = 50;
   const startX = 10;
   const startY = 40;
   const verticalSpacing = 120;
-  const firstLonger = 30;
-  const measuresPerRow = 3;
+  const firstLonger = 65;
 
   const measures = groupNotesIntoMeasures(notes);
-  const totalRows = Math.ceil(measures.length / measuresPerRow);
+
+  const totalRows = 10;               ///////////////////TODOOOOOOOOOOO
   const totalHeight = startY + totalRows * verticalSpacing;
 
   renderer.resize(1300, totalHeight);
   const ctx = renderer.getContext();
 
+
+  let currentRow = 0;
+  let lastX = startX;
   measures.forEach((measureNotes, i) => {
-    const row = Math.floor(i / measuresPerRow);
-    const col = i % measuresPerRow;
+    let baseStaveWidth = oneNoteWidth * measureNotes.length;
+    let currentStaveWidth = baseStaveWidth;
+    let isFirstCol = 0;
+    if (lastX + currentStaveWidth >= rowLength || (currentRow === 0 && lastX === startX)){
+      isFirstCol = 1;
+      lastX = startX;
+      currentRow++;
+      currentStaveWidth += firstLonger;
+    }
+    const x = lastX;
+    const y = startY + currentRow * verticalSpacing;
 
-    const x = startX + col * staveWidth + (col === 0 ? 0 : firstLonger);
-    const y = startY + row * verticalSpacing;
-    const width = staveWidth + (col === 0 ? firstLonger : 0);
-
-    const stave = new Stave(x, y, width);
-    if (col === 0) stave.addClef("treble").addTimeSignature("4/4");
+    const stave = new Stave(x, y, currentStaveWidth);
+    if (isFirstCol) stave.addClef("treble").addTimeSignature("4/4");
 
     stave.setContext(ctx).draw();
 
@@ -93,8 +106,10 @@ function render() {
     voice.setStrict(false);
     voice.addTickables(measureNotes);
 
-    new Formatter().joinVoices([voice]).format([voice], width - 65);
+    new Formatter().joinVoices([voice]).format([voice], baseStaveWidth - 20);
     voice.draw(ctx, stave);
+
+    lastX += currentStaveWidth;
   });
 }
 
@@ -272,7 +287,8 @@ function playSound() {
             if (acc) {
                 if (typeof acc.getValue === "function") {
                     accidental = acc.getValue();
-                } else if (acc.value) {
+                } 
+                else if (acc.value) {
                     accidental = acc.value;
                 }
             }
