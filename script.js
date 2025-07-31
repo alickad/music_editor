@@ -22,6 +22,25 @@ const durationMap = {
   "1r":  { vfDuration: "wr",  beats: 4 },
 };
 
+const validAccidentals = [
+  "",
+  "#",
+  "b",
+  "n",
+  "##",
+  "bb"
+]
+
+const validNotes = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G"
+]
+
 const accidentalsMap = {
   "none": null,
   "sharp": "#",
@@ -32,6 +51,7 @@ const accidentalsMap = {
 };
 
 function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
+  // no need to change to staveNotes
   const measures = [];
   let current = [];
   let currentBeats = 0;
@@ -111,6 +131,7 @@ function areFirst(widths){
 }
 
 function render() {
+  // no need to change (?)
   const container = document.getElementById("musicContainer");
   container.innerHTML = "";
 
@@ -163,6 +184,7 @@ function render() {
 }
 
 function addNote() {
+  // TODO lots of stavenotes (no?)
   const pitch = document.getElementById("note-select").value;
   const octave = document.getElementById("octave-select")?.value || "4";
   const fullPitch = pitch.toLowerCase() + "/" + octave;
@@ -196,48 +218,41 @@ function deleteLastNote() {
 }
 function addNoteFromInput() {
   const keyboardInput = document.getElementById("keyboard-select").value;
-  const [note, octave] = keyboardInput.split("/");
-
-  let notePart = note;
-  let accidentalPart = "";
-  if (note.includes("#")) {
-    if (note.length === 2 && note[1] === "#") {
-        notePart = note[0];
-        accidentalPart = "sharp";
+  let chord = [];
+  const durationKey = 4;
+  chord = keyboardInput.split(" ");
+  if (Number.isInteger(Number(chord[chord.length - 1]))) {
+    durationKey = chord[chord.length - 1];
+  }
+  const dur = durationMap[durationKey].vfDuration;
+  let allKeys = [];
+  let allAccidentals = []
+  for (let i = 0; i < chord.length; i++){
+    const [notePart, octavePart] = chord[i].split("/");
+    if (!validNotes.includes(notePart[0].toUpperCase())){
+      alert("Invalid note format. Use format like 'C#/4' or 'Bb/3 a/4 c#/5'");
     }
-    else if (note.length === 3 && note[1] === "#" && note[2] === "#") {
-        notePart = note[0];
-        accidentalPart = "double-sharp";
+    let parsedNote = notePart[0].toLowerCase() + "/" + (octavePart || 4);
+    allKeys.push(parsedNote);
+    let accidentalPart = notePart.slice(1);
+    if (!validAccidentals.includes(accidentalPart)){
+      alert("Invalid note format. Use format like 'C#/4' or 'Bb/3 a/4 c#/5'");
+    }
+    allAccidentals.push(accidentalPart);
+  }
+  let parsedChord = new StaveNote({
+    clef: "treble",
+    duration: dur,
+    keys: allKeys
+  })
+  for (let i = 0; i < allAccidentals.length; i++){
+    if (allAccidentals[i]){
+      parsedChord.addModifier(new Accidental(allAccidentals[i]), i);
     }
   }
-  else if (note.includes("b")) {
-      // Only treat 'b' as flat if it's not the note 'b'
-      if (note.length === 2 && note[1] === "b") {
-          notePart = note[0];
-          accidentalPart = "flat";
-      }
-      if (note.length === 3 && note[1] === "b" && note[2] === "b") {
-          notePart = note[0];
-          accidentalPart = "double-flat";
-      }
-  } 
-  else if (note.length === 2 && note[1] === "n") {
-      notePart = note[0];
-      accidentalPart = "natural";
-  } 
-  else if (note.length > 1){
-    alert("Invalid note format. Use format like 'C#/4' or 'Bb/3'.");
-  }
 
-  document.getElementById("note-select").value = notePart;
-  document.getElementById("octave-select").value = octave || "4";
-  if (accidentalPart) {
-      document.getElementById("accidentals-select").value = accidentalPart;
-  } 
-  else {
-      document.getElementById("accidentals-select").value = "none";
-  }
-  addNote();
+  notes.push(parsedChord);
+  render();
 }
 
 function clearNotes() {
