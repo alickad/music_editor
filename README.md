@@ -11,7 +11,7 @@ A simple music notation web editor. Some version (not neccessarily up to date) c
 - TuneJS (playback)
 
 ## TODO
-- music playback not ignoring accidentals
+- ~music playback not ignoring accidentals~ DONE
 - download MIDI and PDF
 - multiple notes played at once (then also in playback)
 - select notes / delete notes / edit notes

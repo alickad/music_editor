@@ -180,6 +180,10 @@ function addNote() {
 
   if (!isRest && accidentalsMap[accidental]) {
     note.addModifier(new Accidental(accidentalsMap[accidental]), 0);
+    note._myAccidental = accidentalsMap[accidental];
+  }
+  else{
+    note._myAccidental = null;
   }
 
   notes.push(note);
@@ -325,7 +329,7 @@ function playSound() {
         let [noteNameRaw, octave] = key.split("/");
 
         // Default accidental is none
-        let accidental = "";
+        let accidental = note._myAccidental || "";
 
         // Check for accidental modifier (VexFlow 4+)
         if (note.modifiers && note.modifiers.length > 0) {
@@ -341,12 +345,6 @@ function playSound() {
                     accidental = acc.value;
                 }
             }
-        }
-
-        // If no modifier, try to extract accidental from key name
-        if (!accidental && noteNameRaw.length > 1) {
-            if (noteNameRaw[1] === "#") accidental = "#";
-            else if (noteNameRaw[1] === "b") accidental = "b";
         }
 
         // Compose Tone.js note name
