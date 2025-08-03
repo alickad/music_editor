@@ -212,10 +212,10 @@ function addNote() {
 
   if (!isRest && accidentalsMap[accidental]) {
     note.addModifier(new Accidental(accidentalsMap[accidental]), 0);
-    note._myAccidental = accidentalsMap[accidental];
+    note._myAccidentals = [accidentalsMap[accidental]];
   }
   else{
-    note._myAccidental = null;
+    note._myAccidental = [null];
   }
 
   notes.push(note);
@@ -264,6 +264,7 @@ function addNoteFromInput() {
       parsedChord.addModifier(new Accidental(allAccidentals[i]), i);
     }
   }
+  parsedChord._myAccidentals = allAccidentals;
 
   notes.push(parsedChord);
   render();
@@ -342,54 +343,50 @@ function downloadMIDI() {
 }
 
 function playSound() {
-    const synth = new Tone.Synth().toDestination();
+    const synth = new Tone.PolySynth().toDestination();
     const now = Tone.now();
     let time = now;
     notes.forEach((note) => {
-        // Skip rests
-        if (note.isRest()) {
-            const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
-            const beats = durationMap[durKey]?.beats || 0.5;
-            time += beats * 0.5;
-            return;
-        }
-        // Get note name and octave
-        const key = note.keys[0];
+      // Skip rests
+      if (note.isRest()) {
+          const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
+          const beats = durationMap[durKey]?.beats || 0.5;
+          time += beats * 0.5;
+          return;
+      }
+      let pitches = [];
+      for (let i = 0; i < note.keys.length; i++){
+        const key = note.keys[i];
         let [noteNameRaw, octave] = key.split("/");
+        let accidental = note._myAccidentals[i];
 
-        // Default accidental is none
-        let accidental = note._myAccidental || "";
-
-        // Check for accidental modifier (VexFlow 4+)
-        if (note.modifiers && note.modifiers.length > 0) {
-            const acc = note.modifiers.find(m =>
-                (typeof m.getCategory === "function" && m.getCategory() === "accidentals") ||
-                m.type === "Accidental"
-            );
-            if (acc) {
-                if (typeof acc.getValue === "function") {
-                    accidental = acc.getValue();
-                } 
-                else if (acc.value) {
-                    accidental = acc.value;
-                }
-            }
+        const acc = note.modifiers?.find(mod =>
+          mod.getCategory?.() === "accidentals" || mod.type === "Accidental"
+        );
+        if (acc) {
+          if (typeof acc.getValue === "function") {
+            accidental = acc.getValue();
+          } else if (acc.value) {
+            accidental = acc.value;
+          }
         }
 
-        // Compose Tone.js note name
-        let toneNote = noteNameRaw[0].toUpperCase();
+        let toneNote = noteNameRaw.toUpperCase();
         if (accidental === "#") toneNote += "#";
         else if (accidental === "b") toneNote += "b";
         else if (accidental === "##") toneNote += "##";
         else if (accidental === "bb") toneNote += "bb";
-        // else if (accidental === "n") ; // natural, do nothing
+        // "n" (natural) is default
 
-        const toneNoteFull = toneNote + (octave || "4");
-        const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
-        const beats = durationMap[durKey]?.beats || 0.5;
-        const seconds = beats * 0.5;
-        synth.triggerAttackRelease(toneNoteFull, seconds, time);
-        time += seconds;
+        pitches.push( toneNote + (octave || "4") );
+
+      }
+
+      const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
+      const beats = durationMap[durKey]?.beats || 0.5;
+      const seconds = beats * 0.5;
+      synth.triggerAttackRelease(pitches, seconds, time);
+      time += seconds;
     });
 }
 
