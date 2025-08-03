@@ -194,15 +194,16 @@ function render() {
 }
 
 function addNote() {
-  // TODO lots of stavenotes (no?)
   const pitch = document.getElementById("note-select").value;
   const octave = document.getElementById("octave-select")?.value || "4";
   const fullPitch = pitch.toLowerCase() + "/" + octave;
   const durationKey = document.getElementById("duration-select").value;
   const accidental = document.getElementById("accidentals-select")?.value || "none";
 
-  const dur = durationMap[durationKey].vfDuration;
-  const isRest = dur.endsWith("r");
+  const isRest = (pitch === "rest");
+  let dur = durationMap[durationKey].vfDuration;
+  if (isRest) dur += "r";
+  
 
   const note = new StaveNote({
     clef: "treble",
@@ -221,13 +222,14 @@ function addNote() {
   notes.push(note);
   render();
 }
+
 function deleteLastNote() {
   if (notes.length === 0) return;
   notes.pop();
   render();
 }
+
 function addNoteFromInput() {
-  // TODO rests
   const keyboardInput = document.getElementById("keyboard-select").value;
   let chord = [];
   let durationKey = 4;
@@ -236,6 +238,24 @@ function addNoteFromInput() {
     durationKey = chord[chord.length - 1];
   }
   const dur = durationMap[durationKey].vfDuration;
+
+  if (chord[0] === "rest"){
+    if (chord.length > 2){
+      alert("Invalid note format. Use format like 'Bb/3 A c#/5' or 'rest 2'");
+    }
+    else if (chord.length === 2 && !Number.isInteger(Number(chord[chord.length - 1]))){
+      alert("Invalid note format. Use format like 'Bb/3 a/4 c#/5' or 'rest 2'");
+    }
+    let parsedChord = new StaveNote({
+      clef: "treble",
+      duration: dur + "r",
+      keys: ["b/4"]
+    })
+    notes.push(parsedChord);
+    render();
+    return;
+  }
+
   let allKeys = [];
   let allAccidentals = []
   for (let i = 0; i < chord.length; i++){
