@@ -50,6 +50,16 @@ const accidentalsMap = {
   "double-flat": "bb"
 };
 
+function showEditor() {
+  document.getElementById("Editor_part").style.display = "block";
+  document.getElementById("Tutorial_part").style.display = "none";
+}
+
+function showTutorial() {
+  document.getElementById("Editor_part").style.display = "none";
+  document.getElementById("Tutorial_part").style.display = "block";
+}
+
 function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
   // no need to change to staveNotes
   const measures = [];
@@ -79,7 +89,7 @@ function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
 
 function calculateMeasureWidths(measures){
   const rowLength = 1250;
-  const oneNoteWidth = 50;
+  const oneNoteWidth = 52;
   let widths = [];
   let currentLength = 0;
   for (let i = 0; i < measures.length; i++){
@@ -217,9 +227,10 @@ function deleteLastNote() {
   render();
 }
 function addNoteFromInput() {
+  // TODO rests
   const keyboardInput = document.getElementById("keyboard-select").value;
   let chord = [];
-  const durationKey = 4;
+  let durationKey = 4;
   chord = keyboardInput.split(" ");
   if (Number.isInteger(Number(chord[chord.length - 1]))) {
     durationKey = chord[chord.length - 1];
@@ -228,6 +239,9 @@ function addNoteFromInput() {
   let allKeys = [];
   let allAccidentals = []
   for (let i = 0; i < chord.length; i++){
+    if (i === chord.length - 1 && Number.isInteger(Number(chord[chord.length - 1]))){
+      continue;
+    }
     const [notePart, octavePart] = chord[i].split("/");
     if (!validNotes.includes(notePart[0].toUpperCase())){
       alert("Invalid note format. Use format like 'C#/4' or 'Bb/3 a/4 c#/5'");

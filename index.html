@@ -10,6 +10,11 @@
 <body>
   <h1>Simple Music Notation Editor</h1>
 
+
+  <button onclick="showEditor()">Editor</button>
+  <button onclick="showTutorial()">Tutorial</button>
+
+<div id="Editor_part">
 <div class="controls"></div>
     <label for="keyboard-select">Type note:</label>
     <input type="text" id="keyboard-select" name="keyboard-select" onkeydown="if(event.key==='Enter'){addNoteFromInput();}">
@@ -72,6 +77,43 @@
   </div>
 
   <div id="musicContainer"></div>
+</div>
+
+<div id="Tutorial_part" style="display: none; padding: 1em;">
+  <p>This is a simple notes editor working on javascript. If you want to see the code (at your own risk, I am not responsible for the trauma caused),
+    or you would like to see a bit more technical documentation, it is on github: <a href="https://github.com/alickad/music_editor">github.com/alickad/music_editor</a>. 
+    Here is a guide on how to use the tool. Enjoy :)
+  </p>
+  <h2>Adding notes</h2>
+  <p>There are two ways how you can add notes:</p>
+  <h3>1. Select from dropdown menus</h3>
+  <li>select the desired note, octave, accidental and duration</li>
+  <li>click "Add Note" button</li>
+  <li>if you select the note to be a rest, octave and accidentals info will be ignored</li>
+  <li>you can only add one note at a time. If you want to create chords, use the option to add notes from keyboard</li>
+  <li>to erase the last added note, hit Backspace</li>
+
+
+  <h3>2. Add from keyboard</h3>
+  <li>Type the desired notes into the "Type note" window, then hit Enter.</li>
+  <li>To delete the last added note, click outside the typing window and hit Backspace.</li>
+  <h4>Format of notes in keyboard mode</h4>
+  <li>letter representing a note (upper or lower case)</li>
+  <li>valid accidentals if needed (#, ##, b, bb, n for sharp, double sharp, flat, double flat and natural)</li>
+  <li>backslash followed by octave. If no octave is written, 4 is automatically assigned.</li>
+  <li>space and number representing duration (1 is a whole, 2 is a half-note, 4 is a quarter-note and so on). If the number is missing, 4 is automatically assigned.</li>
+  <h4>Chords</h4>
+  <p>To form a chord, write the desired notes devided by Space, each of them as described above. The duration has to be written last and is the same for the whole chord.</p>
+  <h4>Rests</h4>
+  <p>Simply write "rest" and the number representing duration.</p>
+
+
+  <h2>Other functions</h2>
+  <li>Delete all the notes by clicking the "Clear" button</li>
+  <li>For export, select your preffered format in the dropdown selection next to "Download" option</li>
+  <li>Listen to the music by clicking "Play"</li>
+
+</div>
 
   <script src="script.js"></script>
 </body>
