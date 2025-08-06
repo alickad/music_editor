@@ -59,13 +59,15 @@
     <button onclick="addNote()">Add Note</button>
     <button onclick="clearNotes()">Clear</button>
 
-    <label for="download">Download:</label>
-    <select id="download" onchange="handleDownloadChange(event)">
-      <option value="pdf">PDF</option>
-      <option value="png">PNG</option>
-      <option value="svg">SVG</option>
-      <option value="midi">MIDI</option>
-    </select>
+  <div class="dropdown">
+    <button class="dropbtn">Download</button>
+    <div class="dropdown-content">
+      <a href="#" onclick="downloadPDF(); return false;">PDF</a>
+      <a href="#" onclick="downloadPNG(); return false;">PNG</a>
+      <a href="#" onclick="downloadSVG(); return false;">SVG</a>
+      <a href="#" onclick="downloadMIDI(); return false;">MIDI</a>
+    </div>
+  </div>
 
     <button onclick="playSound()">Play</button>
 
