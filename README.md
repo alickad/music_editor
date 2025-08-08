@@ -16,7 +16,7 @@ A simple music notation web editor. Some version (not neccessarily up to date) c
 - ~music playback not ignoring accidentals~ DONE
 - ~multiple notes played at once (then also in playback)~ DONE
 - ~variable measure length (based on number of notes)~ DONE
-- tutorial on the web page (documentation for user)
+- ~tutorial on the web page (documentation for user)~ DONE
 - download MIDI and PDF
 - select notes / delete notes / edit notes
 - it could look better.
