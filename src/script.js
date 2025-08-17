@@ -1,11 +1,11 @@
-const {
+import {
   Renderer,
   Stave,
   StaveNote,
   Voice,
   Formatter,
   Accidental
-} = Vex.Flow;
+} from "vexflow";
 
 let notes = [];
 
@@ -50,15 +50,19 @@ const accidentalsMap = {
   "double-flat": "bb"
 };
 
+const rowLength = 1250;
+
 function showEditor() {
   document.getElementById("Editor_part").style.display = "block";
   document.getElementById("Tutorial_part").style.display = "none";
 }
+window.showEditor = showEditor;
 
 function showTutorial() {
   document.getElementById("Editor_part").style.display = "none";
   document.getElementById("Tutorial_part").style.display = "block";
 }
+window.showTutorial = showTutorial;
 
 function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
   // no need to change to staveNotes
@@ -88,7 +92,6 @@ function groupNotesIntoMeasures(notes, beatsPerMeasure = 4) {
 }
 
 function calculateMeasureWidths(measures){
-  const rowLength = 1250;
   const oneNoteWidth = 52;
   let widths = [];
   let currentLength = 0;
@@ -113,7 +116,6 @@ function calculateMeasureWidths(measures){
 
 function numOfRows(widths){
   let sum = 0;
-  rowLength = 1250;
   for (let i = 0; i < widths.length; i++){
     sum += widths[i];
   }
@@ -122,8 +124,7 @@ function numOfRows(widths){
 
 function areFirst(widths){
   let areFirst = [];
-  rowLength = 1250;
-  currentWidth = 0;
+  let currentWidth = 0;
   for (let i = 0; i < widths.length; i++){
     if (currentWidth === 0){
       areFirst.push(1);
@@ -141,12 +142,10 @@ function areFirst(widths){
 }
 
 function render() {
-  // no need to change (?)
   const container = document.getElementById("musicContainer");
   container.innerHTML = "";
 
   const renderer = new Renderer(container, Renderer.Backends.SVG);
-  const rowLength = 1250;
   const startX = 10;
   const startY = 40;
   const verticalSpacing = 120;
@@ -222,12 +221,14 @@ function addNote() {
   notes.push(note);
   render();
 }
+window.addNote = addNote;
 
 function deleteLastNote() {
   if (notes.length === 0) return;
   notes.pop();
   render();
 }
+window.deleteLastNote = deleteLastNote;
 
 function addNoteFromInput() {
   const keyboardInput = document.getElementById("keyboard-select").value;
@@ -289,19 +290,13 @@ function addNoteFromInput() {
   notes.push(parsedChord);
   render();
 }
+window.addNoteFromInput = addNoteFromInput;
 
 function clearNotes() {
   notes = [];
   render();
 }
-
-function handleDownloadChange(e) {
-  const val = e.target.value;
-  if (val === "png") downloadPNG();
-  else if (val === "pdf") downloadPDF();
-  else if (val === "svg") downloadSVG();
-  else if (val === "midi") downloadMIDI();
-}
+window.clearNotes = clearNotes;
 
 function downloadPNG() {
   const container = document.getElementById("musicContainer");
@@ -336,6 +331,7 @@ function downloadPNG() {
 
   img.src = url;
 }
+window.downloadPNG = downloadPNG;
 
 function downloadSVG() {
   const container = document.getElementById("musicContainer");
@@ -353,14 +349,17 @@ function downloadSVG() {
   a.click();
   URL.revokeObjectURL(url);
 }
+window.downloadSVG = downloadSVG;
 
 function downloadPDF() {
   alert("PDF export is not implemented yet.");
 }
+window.downloadPDF = downloadPDF;
 
 function downloadMIDI() {
   alert("MIDI export is not implemented yet.");
 }
+window.downloadMIDI = downloadMIDI;
 
 function playSound() {
     const synth = new Tone.PolySynth().toDestination();
@@ -378,7 +377,9 @@ function playSound() {
       for (let i = 0; i < note.keys.length; i++){
         const key = note.keys[i];
         let [noteNameRaw, octave] = key.split("/");
-        let accidental = note._myAccidentals[i];
+        
+        let allAccidentals = note._myAccidentals || [];
+        let accidental = allAccidentals[i] || null;
 
         const acc = note.modifiers?.find(mod =>
           mod.getCategory?.() === "accidentals" || mod.type === "Accidental"
@@ -409,6 +410,7 @@ function playSound() {
       time += seconds;
     });
 }
+window.playSound = playSound;
 
 document.addEventListener("keydown", function (e) {
     const active = document.activeElement;

@@ -1,0 +1,23 @@
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+.vite/
+
+# Local environment files
+*.local
+
+# Editor/OS junk
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
