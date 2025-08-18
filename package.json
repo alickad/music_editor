@@ -12,6 +12,8 @@
     "vite": "^7.1.2"
   },
   "dependencies": {
+    "jspdf": "^3.0.1",
+    "svg2pdf.js": "^2.5.0",
     "tone": "^15.1.22",
     "vexflow": "^5.0.0"
   }

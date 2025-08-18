@@ -2,7 +2,7 @@
 A simple music notation web editor. Some version (not neccessarily up to date) can be found on https://www.ms.mff.cuni.cz/~domanyoa/music_editor/index.html together with user documentation.
 
 ## Functions
-- very basic note scripting
+- basic note scripting
 - download
 - playback
 

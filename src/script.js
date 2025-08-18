@@ -352,9 +352,11 @@ function downloadSVG() {
 window.downloadSVG = downloadSVG;
 
 function downloadPDF() {
-  alert("PDF export is not implemented yet.");
+  alert("PDF export is not implemented yet.")
 }
 window.downloadPDF = downloadPDF;
+
+
 
 function downloadMIDI() {
   alert("MIDI export is not implemented yet.");
