@@ -6,6 +6,7 @@ import {
   Formatter,
   Accidental
 } from "vexflow";
+import MidiWriter from 'midi-writer-js';
 
 let notes = [];
 
@@ -192,7 +193,19 @@ function render() {
   };
 }
 
-function addNote() {
+let selectedNote = -1;
+function noteSelect(step = 0){
+  if (notes.length < selectedNote + step || selectedNote + step < 0){
+    return;
+  }
+  if (selectedNote >= 0 && selectedNote < notes.length){
+    notes[selectedNote].setStyle({fillStyle: "black", strokeStyle: "black"});
+  }
+  notes[selectedNote + step].setStyle({fillStyle: "blue", strokeStyle: "blue"});
+  selectedNote += step;
+}
+
+function addNote(index = notes.length) {
   const pitch = document.getElementById("note-select").value;
   const octave = document.getElementById("octave-select")?.value || "4";
   const fullPitch = pitch.toLowerCase() + "/" + octave;
@@ -218,14 +231,20 @@ function addNote() {
     note._myAccidental = [null];
   }
 
-  notes.push(note);
+  notes.splice(selectedNote + 1, 0, note);
+  noteSelect(1);
   render();
 }
 window.addNote = addNote;
 
 function deleteLastNote() {
   if (notes.length === 0) return;
-  notes.pop();
+  if (selectedNote < 0 || selectedNote > notes.length) return;
+  notes.splice(selectedNote, 1);
+  if (selectedNote === notes.length){
+    noteSelect(-1);
+  }
+  else noteSelect();
   render();
 }
 window.deleteLastNote = deleteLastNote;
@@ -243,16 +262,20 @@ function addNoteFromInput() {
   if (chord[0] === "rest"){
     if (chord.length > 2){
       alert("Invalid note format. Use format like 'Bb/3 A c#/5' or 'rest 2'");
+      return;
     }
     else if (chord.length === 2 && !Number.isInteger(Number(chord[chord.length - 1]))){
       alert("Invalid note format. Use format like 'Bb/3 a/4 c#/5' or 'rest 2'");
+      return;
     }
     let parsedChord = new StaveNote({
       clef: "treble",
       duration: dur + "r",
       keys: ["b/4"]
     })
-    notes.push(parsedChord);
+
+    notes.splice(selectedNote + 1, 0, parsedChord);
+    noteSelect(1);
     render();
     return;
   }
@@ -266,12 +289,14 @@ function addNoteFromInput() {
     const [notePart, octavePart] = chord[i].split("/");
     if (!validNotes.includes(notePart[0].toUpperCase())){
       alert("Invalid note format. Use format like 'C#/4' or 'Bb/3 a/4 c#/5'");
+      return;
     }
     let parsedNote = notePart[0].toLowerCase() + "/" + (octavePart || 4);
     allKeys.push(parsedNote);
     let accidentalPart = notePart.slice(1);
     if (!validAccidentals.includes(accidentalPart)){
       alert("Invalid note format. Use format like 'C#/4' or 'Bb/3 a/4 c#/5'");
+      return;
     }
     allAccidentals.push(accidentalPart);
   }
@@ -287,7 +312,8 @@ function addNoteFromInput() {
   }
   parsedChord._myAccidentals = allAccidentals;
 
-  notes.push(parsedChord);
+  notes.splice(selectedNote + 1, 0, parsedChord);
+  noteSelect(1);
   render();
 }
 window.addNoteFromInput = addNoteFromInput;
@@ -295,6 +321,7 @@ window.addNoteFromInput = addNoteFromInput;
 function clearNotes() {
   notes = [];
   render();
+  selectedNote = -1;
 }
 window.clearNotes = clearNotes;
 
@@ -360,9 +387,57 @@ window.downloadPDF = downloadPDF;
 
 function downloadMIDI() {
   alert("MIDI export is not implemented yet.");
+/*  const voice = new Voice({ num_beats: 4, beat_value: 4 });
+  voice.setStrict(false);
+  let notesMIDI = notes.slice();
+  for ()
+  voice.addTickables(notesMIDI);
+
+  const vexWriter = new MidiWriter.VexFlow();
+  const track = vexWriter.trackFromVoice(voice);
+  const writer = new MidiWriter.Writer([track]);
+
+  const blob = new Blob([writer.buildFile()], { type: "audio/midi" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "music.mid";
+  a.click();
+  URL.revokeObjectURL(url);*/
 }
 window.downloadMIDI = downloadMIDI;
 
+function convertPitchToMIDI(note){
+  let pitches = [];
+  for (let i = 0; i < note.keys.length; i++){
+    const key = note.keys[i];
+    let [noteNameRaw, octave] = key.split("/");
+    
+    let allAccidentals = note._myAccidentals || [];
+    let accidental = allAccidentals[i] || null;
+
+    const acc = note.modifiers?.find(mod =>
+      mod.getCategory?.() === "accidentals" || mod.type === "Accidental"
+    );
+    if (acc) {
+      if (typeof acc.getValue === "function") {
+        accidental = acc.getValue();
+      } else if (acc.value) {
+        accidental = acc.value;
+      }
+    }
+
+    let toneNote = noteNameRaw.toUpperCase();
+    if (accidental === "#") toneNote += "#";
+    else if (accidental === "b") toneNote += "b";
+    else if (accidental === "##") toneNote += "##";
+    else if (accidental === "bb") toneNote += "bb";
+    // "n" (natural) is default
+
+    pitches.push( toneNote + (octave || "4") );
+  }
+  return pitches;
+}
 function playSound() {
     const synth = new Tone.PolySynth().toDestination();
     const now = Tone.now();
@@ -370,41 +445,12 @@ function playSound() {
     notes.forEach((note) => {
       // Skip rests
       if (note.isRest()) {
-          const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
-          const beats = durationMap[durKey]?.beats || 0.5;
-          time += beats * 0.5;
-          return;
+        const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
+        const beats = durationMap[durKey]?.beats || 0.5;
+        time += beats * 0.5;
+        return;
       }
-      let pitches = [];
-      for (let i = 0; i < note.keys.length; i++){
-        const key = note.keys[i];
-        let [noteNameRaw, octave] = key.split("/");
-        
-        let allAccidentals = note._myAccidentals || [];
-        let accidental = allAccidentals[i] || null;
-
-        const acc = note.modifiers?.find(mod =>
-          mod.getCategory?.() === "accidentals" || mod.type === "Accidental"
-        );
-        if (acc) {
-          if (typeof acc.getValue === "function") {
-            accidental = acc.getValue();
-          } else if (acc.value) {
-            accidental = acc.value;
-          }
-        }
-
-        let toneNote = noteNameRaw.toUpperCase();
-        if (accidental === "#") toneNote += "#";
-        else if (accidental === "b") toneNote += "b";
-        else if (accidental === "##") toneNote += "##";
-        else if (accidental === "bb") toneNote += "bb";
-        // "n" (natural) is default
-
-        pitches.push( toneNote + (octave || "4") );
-
-      }
-
+      let pitches = convertPitchToMIDI(note);
       const durKey = Object.keys(durationMap).find(k => durationMap[k].vfDuration === note.duration);
       const beats = durationMap[durKey]?.beats || 0.5;
       const seconds = beats * 0.5;
@@ -422,6 +468,27 @@ document.addEventListener("keydown", function (e) {
     ) {
         e.preventDefault();
         deleteLastNote();
+    }
+
+    else if (
+      e.key === "ArrowLeft" &&
+      (!active || active.id !== "keyboard-select")
+    ) {
+      e.preventDefault();
+      if (selectedNote - 1 >= 0){
+        noteSelect(-1);
+        render();
+      }
+    }
+    else if (
+      e.key === "ArrowRight" &&
+      (!active || active.id !== "keyboard-select")
+    ) {
+      e.preventDefault();
+      if (selectedNote + 1< notes.length){
+        noteSelect(1);
+        render();
+      }
     }
 });
 
