@@ -237,17 +237,14 @@ function addNote(index = notes.length) {
 }
 window.addNote = addNote;
 
-function deleteLastNote() {
+function deleteNote() {
   if (notes.length === 0) return;
   if (selectedNote < 0 || selectedNote > notes.length) return;
   notes.splice(selectedNote, 1);
-  if (selectedNote === notes.length){
-    noteSelect(-1);
-  }
-  else noteSelect();
+  noteSelect(-1);
   render();
 }
-window.deleteLastNote = deleteLastNote;
+window.deleteNote = deleteNote;
 
 function addNoteFromInput() {
   const keyboardInput = document.getElementById("keyboard-select").value;
@@ -477,7 +474,7 @@ document.addEventListener("keydown", function (e) {
         (!active || active.id !== "keyboard-select")
     ) {
         e.preventDefault();
-        deleteLastNote();
+        deleteNote();
     }
 
     else if (
