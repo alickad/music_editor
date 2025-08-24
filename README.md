@@ -1,5 +1,5 @@
 # music_editor
-A simple music notation web editor. Some version (not neccessarily up to date) can be found on https://www.ms.mff.cuni.cz/~domanyoa/music_editor/index.html together with user documentation.
+A simple music notation web editor. Some version (not neccessarily up to date) can be found on https://alickad.github.io/music_editor/ together with user documentation.
 
 ## Functions
 - basic note scripting
