@@ -326,6 +326,9 @@ function clearNotes() {
 window.clearNotes = clearNotes;
 
 function downloadPNG() {
+  notes[selectedNote].setStyle({fillStyle: "black", strokeStyle: "black"});
+  render();
+
   const container = document.getElementById("musicContainer");
   const svg = container.querySelector("svg");
   if (!svg) return alert("No SVG to download!");
@@ -349,6 +352,9 @@ function downloadPNG() {
     a.href = canvas.toDataURL("image/png");
     a.download = "music.png";
     a.click();
+
+    notes[selectedNote].setStyle({fillStyle: "blue", strokeStyle: "blue"});
+    render();
   };
 
   img.onerror = () => {
@@ -361,6 +367,8 @@ function downloadPNG() {
 window.downloadPNG = downloadPNG;
 
 function downloadSVG() {
+  notes[selectedNote].setStyle({fillStyle: "black", strokeStyle: "black"});
+  render();
   const container = document.getElementById("musicContainer");
   const svg = container.querySelector("svg");
   if (!svg) return alert("No SVG to download!");
@@ -375,6 +383,8 @@ function downloadSVG() {
   a.download = "music.svg";
   a.click();
   URL.revokeObjectURL(url);
+  notes[selectedNote].setStyle({fillStyle: "blue", strokeStyle: "blue"});
+  render();
 }
 window.downloadSVG = downloadSVG;
 
